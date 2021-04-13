@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <style>
+        .shade {
+            box-shadow: 0 15px 30px rgba(0, 0, 0, .3) !important;
+        }
+
+        button {
+            color: white;
+            /* padding: 14px 20px;
+            margin: 8px 0; */
+            margin: 2px;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        #wait {
+            /* display:;
+             */
+            visibility: hidden;
+        }
+
+        .loader {
+            border: 15px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 10px;
+            height: 10px;
+            -webkit-animation: spin 2s linear infinite;
+            /* Safari */
+            animation: spin 2s linear infinite;
+        }
+
+        /* Safari */
+        @-webkit-keyframes spin {
+            0% {
+                -webkit-transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-default" style=" background-color: #2f2f2f;">
+        <div class="container">
+            <div class="navbar-header align-center">
+                <a class="navbar-brand" style="color: #fff;">Student App</a>
+            </div>
+        </div>
+    </nav>
+    <!-- {{account_status}} -->
+
+    <!-- First Container -->
+    <div class="container" style="margin-top: 4rem;">
+        <div class="row">
+            <div class="col-md-3 border bg col-sm ">
+                <div class="form-row">
+                    <div>
+                        <button type="submit" class="form-control signupbtn"
+                            style=" background-color: #2f2f2f; color: white;" onclick="addstudent()">Add New
+                            Student</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6"></div>
+            <div class="col-md-3">
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="form-control"
+                        style=" background-color: #2f2f2f; color: white;">logout</button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- second Container -->
+    <!-- second Container -->
+    {% if Payload %}
+    <div class="container shade" style="margin-top: 4rem;">
+        <div class="row">
+            <table class="table table-striped">
+                <thead class="table table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>ProfileId</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Age</th>
+                        <th>Address</th>
+                        <th>Gender</th>
+                        <th>Mark</th>
+                        <th>Semester</th>
+                        <th>Status</th>
+                        <th>Delete</th>
+                        <th>Edit</th>
+
+                    </tr>
+                </thead>
+                <tbody class="list">
+                    {% for item in Payload %}
+                    <tr>
+                        <td>{{forloop.counter}}</td>
+                        <td>{{item.profile_id}}</td>
+                        <td>{{item.name}}</td>
+                        <td>{{item.department}}</td>
+                        <td>{{item.age}}</td>
+                        <td>{{item.address}}</td>
+                        <td>{{item.gender}}</td>
+                        <td>{{item.mark}}</td>
+                        <td>{{item.semester}}</td>
+                        {% if item.status %}
+                        <td style="color:green"> Active</td>
+                        {% else %}
+                        <td style="color:red"> Inactive</td>
+                        {% endif %}
+
+                        {% if item.status %}
+                        <td>
+                            <button class="btn btn-danger"
+                                onclick="delete_student('{{item.profile_id}}','1')">Delete</button>
+                        </td>
+                        {% else %}
+                        <td>
+                            <button class="btn btn-success"
+                                onclick="delete_student('{{item.profile_id}}','2')">Active</button>
+                        </td>
+                        {% endif %}
+                        <td><button class="btn btn-info"
+                                onclick="edit_student('{{item.profile_id}}','{{item.name}}')">Edit</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="container">
+        <h2>No result found !!</h2>
+    </div>
+    {%endif%}
+
+    <!-- add new student start -->
+    <div class="modal fade" id="addNewstudent" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true" style="margin-top: 10 rem !important;">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <span class="close" style="float:right;">&times;</span>
+
+                <div class="modal-header">
+                    <h4 class="modal-title" id="">Add Student</h4>
+
+                </div>
+
+                <div class="modal-body" id="">
+                    <div class="form-row">
+                        <label id="label-Name" for="Name" class="col-md-3">
+                            Name :
+                        </label>
+                        <div class="col-md-9">
+                            <input type="text" class="form-control" name="name" id="name" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label id="label-department" for="department" class="col-md-3">
+                            Department:
+                        </label>
+                        <div class="col-md-9">
+                            <input type="text" class="form-control" name="department" id="department" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label id="label-phone" for="age" class="col-md-3">
+                            Age:
+                        </label>
+                        <div class="col-md-9">
+                            <input type="text" size="4" min="18" class="form-control" name="age" id="age" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label id="label-address" for="address" class="col-md-3">
+                            Address:
+                        </label>
+                        <div class="col-md-9">
+                            <textarea id="address" name="address" class="form-control" rows="4" cols="50"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label id="label-gender" for="gender" class="col-md-3">
+                            Gender:
+                        </label>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <input type="radio" name="gender" value="M">Male
+                            </div>
+                            <div class="col-md-4">
+                                <input type="radio" name="gender" value="F">Female
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label id="label-marks" for="marks" class="col-md-3">
+                            Marks
+                        </label>
+                        <div class="col-md-9">
+                            <input type="text" size="4" class="form-control" name="marks" id="marks" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label id="label-marks" for="marks" class="col-md-3">
+                            Semester Name
+                        </label>
+                        <div class="col-md-9">
+                            <input type="text" class="form-control" name="semester" id="semester" required>
+                        </div>
+                    </div>
+                    </form>
+                </div>
+                <br>
+                <button type="submit" class="form-control" style=" background-color: #2f2f2f; color: white;"
+                    onclick='add_new_student()'>submit</button>
+                <br />
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Massage start -->
+    <div class="modal fade" id="edit_student_model" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true" style="margin-top: 10 rem !important;">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id=""></h4>
+                </div>
+                <div class="modal-body" id="">
+                    <div>Student Old Name: <b><span id="student_name"></span></b> </div><br><br>
+                    <input type="hidden" id="student_profile_id">
+                    <div class="form-row">
+                        <label id="label-Name" for="Name" class="col-md-3">
+                            Enter Name :
+                        </label>
+                        <div class="col-md-9">
+                            <input type="text" class="form-control" placeholder="Enter new Name" name="new_student_name"
+                                id="new_student_name" required>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <button type="submit" class="form-control" style=" background-color: #2f2f2f; color: white;"
+                    onclick="edit_student_name()">Edit</button>
+                <br>
+            </div>
+
+        </div>
+    </div>
+    <!-- Massage End -->
+
+    <!-- Massage start -->
+    <div class="modal fade" id="messageModel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true" style="margin-top: 10 rem !important;">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="messageHeader"></h4>
+                </div>
+                <div class="modal-body" id="messageBody">
+                </div>
+                <button type="submit" class="form-control" onclick="closeModel();"
+                    style=" background-color: #2f2f2f; color: white;">close</button>
+            </div>
+
+        </div>
+    </div>
+    <!-- Massage End -->
+
+
+    <script>
+        var span = document.getElementsByClassName("close")[0];
+
+        function addstudent() {
+            $('#addNewstudent').modal('show')
+        }
+
+        function add_new_student() {
+            var name = document.getElementById('name').value;
+            var department = document.getElementById('department').value;
+            var age = document.getElementById('age').value;
+            var address = document.getElementById('address').value;
+            var gender;
+            var ele = document.getElementsByName('gender');
+            for (i = 0; i < ele.length; i++) {
+                if (ele[i].checked)
+                    gender = ele[i].value;
+            }
+            var marks = document.getElementById('marks').value;
+            var semester = document.getElementById('semester').value;
+            // console.log('gender', gender)
+            console.log(name, department, age, address, gender, marks, semester)
+            const xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function () {
+                if (this.readyState == 4 & this.status == 200) {
+                    resp = JSON.parse(this.responseText).Status;
+                    if (resp == "Success") {
+                        document.getElementById('addNewstudent').style.display = 'none';
+                        $('#messageHeader').html("");
+                        $('#messageBody').html("Record have been inserted Successfully.");
+                        $('#messageModel').modal('show')
+                    } else {
+                        $('#messageHeader').html("");
+                        $('#messageBody').html("Something went wrong please try again later.");
+                        $('#messageModel').modal('show')
+                    }
+                }
+            };
+            xmlhttp.open("POST", "{% url 'addnewstudent' %}", true);
+            xmlhttp.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+            xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xmlhttp.send(JSON.stringify({ "name": name, "department": department, "age": age, "address": address, "gender": gender, "marks": marks, "semester": semester }));
+        }
+
+        //############### delete #####
+
+        function delete_student(value, status) {
+            var msg_status
+            const xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function () {
+                if (this.readyState == 4 & this.status == 200) {
+                    resp = JSON.parse(this.responseText).Status;
+                    resp1 = JSON.parse(this.responseText).msg_Status;
+                    if (resp1 == '1') {
+                        msg_status = 'active'
+                    } else {
+                        msg_status = 'deactive'
+                    }
+                    if (resp == "Success") {
+                        $('#messageHeader').html("");
+                        $('#messageBody').html("Student have been " + msg_status + " Successfully.");
+                        $('#messageModel').modal('show')
+                    } else {
+                        $('#messageHeader').html("");
+                        $('#messageBody').html("Something went wrong please try again later.");
+                        $('#messageModel').modal('show')
+                    }
+                }
+            };
+            xmlhttp.open("POST", "{% url 'delete_student' %}", true);
+            // xmlhttp.setRequestHeader("X-CSRFToken", xmlhttp.getResponseHeader('x-csrf-token'));
+            xmlhttp.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+            xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xmlhttp.send(JSON.stringify({ "profile_id": value, "status": status }));
+        }
+
+        function edit_student(param, param1) {
+            console.log(param)
+            document.getElementById('student_name').innerHTML = param1
+            document.getElementById("student_profile_id").value = param
+            $('#edit_student_model').modal('show')
+        }
+
+        function edit_student_name() {
+            var profile_id = document.getElementById("student_profile_id").value;
+            var new_name = document.getElementById('new_student_name').value;
+            const xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function () {
+                if (this.readyState == 4 & this.status == 200) {
+                    document.getElementById('edit_student_model').style.display = 'none';
+                    resp = JSON.parse(this.responseText).Status;
+                    if (resp == "Success") {
+                        $('#messageHeader').html("");
+                        $('#messageBody').html("Student have been edited Successfully.");
+                        $('#messageModel').modal('show')
+                    } else {
+                        $('#messageHeader').html("");
+                        $('#messageBody').html("Something went wrong please try again later.");
+                        $('#messageModel').modal('show')
+                    }
+                }
+            };
+            xmlhttp.open("POST", "{% url 'edit_student_name' %}", true);
+            xmlhttp.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+            xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xmlhttp.send(JSON.stringify({ "profile_id": profile_id, "new_name": new_name }));
+        }
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        //*********** close model start*****
+        function closeModel() {
+            location.reload();
+        }
+        //*********** close model start*****
+    </script>
+</body>
+
+</html>
